@@ -15,7 +15,7 @@ class Tasks(commands.Cog):
         self.db = bot.db
         self.commands_cog = commands_cog
 
-    @tasks.loop(minutes=20)
+    @tasks.loop(minutes=5)
     async def check_new_chapters(self):
         try:
             print(f"[{self.config.name}] 🔍 Verificando novos lançamentos...")
