@@ -53,7 +53,10 @@ class Tasks(commands.Cog):
                 print(f"[{self.config.name}] ❌ Erro na resposta: {data.get('error')}")
                 return
             
-            updates = data.get('updates', [])
+            if self.config.api_type == 'coruja':
+                updates = data.get('obras', [])
+            else:
+                updates = data.get('updates', [])
             print(f"[{self.config.name}] ✅ Encontradas {len(updates)} obras com novos lançamentos")
             
             for update in updates:
@@ -107,27 +110,35 @@ class Tasks(commands.Cog):
         
         if self.config.api_type == 'yomu':
             chapters = update.get('latestChapters', [])
-        else:
+            nome = update.get('title', '').lower()
+            cover_url = update.get('cover') or update.get('coverImage', 'https://yomu.com.br/default_cover.jpg')
+            nome_obra = update.get('title', nome)
+        elif self.config.api_type == 'senpai':
             chapters = update.get('chapters', [])
+            nome = update.get('title', '').lower()
+            if not nome:
+                nome = update.get('slug', '').replace('-', ' ').lower()
+            cover_url = update.get('cover') or update.get('coverImage', 'https://senpaiscan.com/default_cover.jpg')
+            nome_obra = update.get('title', nome)
+        else: # coruja
+            chapters = update.get('capitulos', [])
+            nome = update.get('titulo', '').lower()
+            if not nome:
+                nome = update.get('slug', '').replace('-', ' ').lower()
+            cover_url = update.get('capa') or 'https://monstercomics.com.br/default_cover.jpg'
+            nome_obra = update.get('titulo', nome)
             
         if not serie or not chapters:
             return
-        
-        nome = serie.get('title', '').lower()
-        if not nome:
-            nome = serie.get('slug', '').replace('-', ' ').lower()
             
         obra = self.db.get_project_data(nome)
         if not obra:
-            nome_obra = serie.get('title', nome)
             cargo_criado_id = None
             
             if self.config.api_type == 'yomu' and serie.get('isYomuTranslation', False):
                 cargo_criado_id = await self.create_yomu_role(nome_obra)
             elif self.config.api_type != 'yomu' and self.config.cargo_base_id:
                 cargo_criado_id = await self.create_base_role(nome_obra)
-            
-            cover_url = serie.get('cover') or serie.get('coverImage', 'https://yomu.com.br/default_cover.jpg')
             
             obra_data = {
                 "nome": nome,
@@ -161,7 +172,11 @@ class Tasks(commands.Cog):
         
         new_chapters = []
         for chapter in chapters:
-            chapter_number = chapter.get('number', 0)
+            if self.config.api_type == 'coruja':
+                chapter_number = float(chapter.get('numero', 0))
+            else:
+                chapter_number = float(chapter.get('number', 0))
+                
             if chapter_number > last_published:
                 new_chapters.append(chapter_number)
         
@@ -223,10 +238,15 @@ class Tasks(commands.Cog):
         start, end = interval
         nome = obra['nome']
         
+        def fmt(n):
+            if isinstance(n, float) and n.is_integer():
+                return str(int(n))
+            return str(n)
+            
         if start == end:
-            chapter_str = str(start)
+            chapter_str = fmt(start)
         else:
-            chapter_str = f"{start} ao {end}"
+            chapter_str = f"{fmt(start)} ao {fmt(end)}"
         
         if self.db.is_chapter_published(nome, chapter_str):
             return
