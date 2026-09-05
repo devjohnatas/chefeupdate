@@ -286,10 +286,13 @@ class Tasks(commands.Cog):
             file_attachment = await self.fetch_image_file(imagem)
             if file_attachment and embed is not None:
                 attachment_url = f"attachment://{file_attachment.filename}"
-                if self.config.api_type == 'yomu' and channel_id == self.config.scan_channel_id:
-                    embed.set_thumbnail(url=attachment_url)
+                if self.config.api_type == 'yomu':
+                    if channel_id == self.config.scan_channel_id:
+                        embed.set_thumbnail(url=attachment_url)
+                    else:
+                        embed.set_image(url=attachment_url)
                 else:
-                    embed.set_image(url=attachment_url)
+                    embed.set_thumbnail(url=attachment_url)
             
         destino = self.bot.get_channel(channel_id)
         if destino:
