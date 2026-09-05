@@ -125,7 +125,7 @@ def create_chapter_embed(obra, capitulo, imagem, config: BotConfig, mensagem=Non
         if config.api_type == 'yomu':
             message_text += f"\n*Para receber notificações desta obra na sua DM, acesse o site, vá em configurações e depois adicione-a no menu de notificações.*\n"
         else:
-            message_text += f"🔖 Pegue a tag do projeto: <id:customize>\n"
+            message_text += f"📌 Pegue a tag do projeto: <id:customize>\n"
 
         if mensagem: 
             message_text += f"\n💬 Mensagem da Staff:\n>>> {mensagem}\n"
@@ -181,7 +181,7 @@ def create_chapter_embed(obra, capitulo, imagem, config: BotConfig, mensagem=Non
         else:
             description = f"📚 **Capítulo:** `{formatted_chapter}`\n"
             description += f"🔗 [**Leia agora no {site_name}!**]({site_url})\n\n"
-            description += f"🔖 **Pegue a tag do projeto:** <id:customize>"
+            description += f"📌 **Pegue a tag do projeto:** <id:customize>"
             
             if mensagem:
                 mensagem_limpa = mensagem.replace(">>>", "").replace("```", "").strip()
