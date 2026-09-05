@@ -21,3 +21,4 @@ wheels/
 *.egg
 .env
 databases/*.db
+venv/
