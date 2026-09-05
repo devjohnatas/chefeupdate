@@ -27,10 +27,17 @@ class Tasks(commands.Cog):
                     "Content-Type": "application/json"
                 }
                 params = {}
-            else:
+            elif self.config.api_type == 'senpai':
                 url = f"{self.config.api_base_url}/updates"
                 headers = {
                     "Authorization": f"Bearer {self.config.api_key}",
+                    "Content-Type": "application/json"
+                }
+                params = {"api": self.config.api_key, "page": 1, "limit": 50}
+            else: # Coruja
+                url = f"{self.config.api_base_url}/updates"
+                headers = {
+                    "x-api-key": self.config.api_key,
                     "Content-Type": "application/json"
                 }
                 params = {"api": self.config.api_key, "page": 1, "limit": 50}
