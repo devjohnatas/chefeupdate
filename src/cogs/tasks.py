@@ -314,10 +314,23 @@ class Tasks(commands.Cog):
                 else:
                     embed.set_thumbnail(url=attachment_url)
             
+        reactions = ['🇴', '🇧', '🇬']
+        if self.config.api_type == 'yomu':
+            if is_yomu_translation:
+                reactions.append('<:Yomu:1483272937606742176>')
+            else:
+                reactions.append('🎉')
+        elif self.config.api_type == 'coruja':
+            reactions.append('<:Coruja:1483273297876619284>')
+        elif self.config.api_type == 'senpai':
+            logo_emoji = discord.utils.get(self.bot.emojis, name="Logo")
+            if logo_emoji:
+                reactions.append(logo_emoji)
+            
         destino = self.bot.get_channel(channel_id)
         if destino:
             try:
-                await self._send_webhook(destino, mention_str, embed, view, file_attachment)
+                await self._send_webhook(destino, mention_str, embed, view, file_attachment, reactions)
                 
                 self.db.mark_chapter_as_published(
                     nome, chapter_str, vip_only=vip_info.get('vip_only', False),
@@ -351,11 +364,12 @@ class Tasks(commands.Cog):
             print(f"[{self.config.name}] Erro ao verificar histórico do canal {canal.name}: {e}")
         return False
 
-    async def _send_webhook(self, canal, content, embed, view, file):
+    async def _send_webhook(self, canal, content, embed, view, file, reactions=None):
         import time, random
         unique_id = int(time.time() * 1000) + random.randint(0, 99999)
         wh_name = f"{self.config.name}-{unique_id}"
         
+        msg = None
         try:
             wh = await canal.create_webhook(name=wh_name)
             await asyncio.sleep(2)
@@ -373,13 +387,21 @@ class Tasks(commands.Cog):
                 msg = await wh.send(**kwargs)
             finally:
                 await wh.delete(reason="Mensagem de lançamento enviada")
-            return msg
         except Exception:
             fallback_kwargs = {"content": content, "embed": embed, "view": view}
             if file:
                 if hasattr(file.fp, "seek"): file.fp.seek(0)
                 fallback_kwargs["file"] = file
-            return await canal.send(**fallback_kwargs)
+            msg = await canal.send(**fallback_kwargs)
+            
+        if msg and reactions:
+            for reaction in reactions:
+                try:
+                    await msg.add_reaction(reaction)
+                except Exception as e:
+                    print(f"[{self.config.name}] ❌ Erro ao adicionar reação {reaction}: {e}")
+                    
+        return msg
 
     async def create_yomu_role(self, nome_obra: str) -> int | None:
         try:
