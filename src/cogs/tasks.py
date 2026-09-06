@@ -163,10 +163,13 @@ class Tasks(commands.Cog):
         slug = release.get('slug', '')
         tipo = release.get('type')
         link = f"https://muyoanimes.com/{tipo}/{slug}"
-        sinopse = release.get('overview', 'Sem sinopse.')
-        
-        is_movie = (tipo == 'movie')
-        icon_str = "🍿 Novo Filme" if is_movie else "🍿 Nova Serie"
+        sinopse = release.get('overview') or release.get('description') or 'Sem sinopse.'
+        if tipo == 'movie':
+            icon_str = "🍿 Novo Filme"
+        elif tipo == 'anime':
+            icon_str = "🍿 Novo Anime"
+        else:
+            icon_str = "🍿 Nova Série"
         
         description = (
             f"## {icon_str} disponível\n\n"
