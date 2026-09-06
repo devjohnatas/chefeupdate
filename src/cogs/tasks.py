@@ -161,29 +161,40 @@ class Tasks(commands.Cog):
 
         imagem = release.get('poster')
         slug = release.get('slug', '')
-        link = f"https://muyoanimes.com/{release.get('type')}/{slug}"
+        tipo = release.get('type')
+        link = f"https://muyoanimes.com/{tipo}/{slug}"
+        sinopse = release.get('overview', 'Sem sinopse.')
+        
+        is_movie = (tipo == 'movie')
+        icon_str = "🍿 Novo Filme" if is_movie else "🍿 Nova Serie"
+        
+        description = (
+            f"## {icon_str} disponível\n\n"
+            f"📌 **{nome}**\n"
+            f"🔗 [Assista agora mesmo]({link})\n"
+            f"🔥 **sinopse:**\n\n"
+            f"{sinopse}"
+        )
         
         embed = discord.Embed(
-            title=f"Novo {tipo_str} Disponível: {nome}",
-            description=f"**Sinopse:** {release.get('overview', 'Sem sinopse.')}",
-            color=0x2b2d31,
-            url=link
+            description=description,
+            color=0xF07437
         )
         
         file_attachment = None
         if imagem:
             file_attachment = await self.fetch_image_file(imagem)
             if file_attachment:
-                embed.set_image(url=f"attachment://{file_attachment.filename}")
+                embed.set_thumbnail(url=f"attachment://{file_attachment.filename}")
             else:
-                embed.set_image(url=imagem)
+                embed.set_thumbnail(url=imagem)
                 
-        # Menção do cargo
-        cargo_id = obra.get('cargo_id')
-        mention_str = f"<@&{cargo_id}>" if cargo_id else ""
+        # Menção do cargo fixa conforme solicitado
+        mention_str = "<@&1546210077722153101>"
         
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Assistir Agora", url=link, style=discord.ButtonStyle.link))
+        view.add_item(discord.ui.Button(label="Reportar", url="https://discord.com/channels/1451979957117911064/1546198669332717588", style=discord.ButtonStyle.link))
         
         if destino:
             try:
