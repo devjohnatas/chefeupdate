@@ -134,7 +134,7 @@ class Tasks(commands.Cog):
         # Tenta inserir na DB se for novo
         obra = self.db.get_project_data(nome)
         if not obra:
-            cargo_criado_id = await self.create_base_role(nome) if self.config.cargo_base_id else None
+            cargo_criado_id = None
             obra_data = {
                 "nome": nome,
                 "sinopse": release.get('overview', ''),
