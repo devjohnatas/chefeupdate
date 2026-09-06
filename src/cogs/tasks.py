@@ -198,7 +198,8 @@ class Tasks(commands.Cog):
         
         if destino:
             try:
-                await self._send_webhook(destino, mention_str, embed, view, file_attachment, ['🍿'])
+                muyo_reactions = ['🇴', '🇧', '🇬', '<:Muyo:1483273464709255318>']
+                await self._send_webhook(destino, mention_str, embed, view, file_attachment, muyo_reactions)
                 self.db.mark_chapter_as_published(nome, chapter_str)
                 print(f"[{self.config.name}] ✅ {nome} anunciado!")
             except Exception as e:
