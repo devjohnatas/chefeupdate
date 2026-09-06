@@ -117,3 +117,24 @@ CORUJA_CONFIG = BotConfig(
     log_channel_id=1335305435665924106,
     cargo_base_id=1440807311848374282
 )
+
+# -----------------
+# MUYO CONFIG
+# -----------------
+MUYO_CONFIG = BotConfig(
+    name="Muyo Animes",
+    token=os.getenv('MUYO_DISCORD_TOKEN', ''),
+    db_path="databases/muyo_lancamentos.db",
+    api_base_url=os.getenv('MUYO_API_BASE_URL', "http://localhost:3000/api/bot/releases"),
+    api_key=os.getenv('MUYO_API_KEY', 'muyo_api_secret_123'),
+    api_type="muyo",
+    allowed_guild_id=1451979957117911064,
+    announcement_channel_id=1452001359468433438,
+    adult_channel_id=0,
+    command_channel_id=0,
+    publication_channel_id=1452001359468433438,
+    cargo_fixo_id=0,
+    leitores_role_id=0,
+    log_channel_id=0,
+    cargo_base_id=0
+)

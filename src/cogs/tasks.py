@@ -34,6 +34,13 @@ class Tasks(commands.Cog):
                     "Content-Type": "application/json"
                 }
                 params = {"api": self.config.api_key, "page": 1, "limit": 50}
+            elif self.config.api_type == 'muyo':
+                url = self.config.api_base_url
+                headers = {
+                    "Authorization": f"Bearer {self.config.api_key}",
+                    "Content-Type": "application/json"
+                }
+                params = {}
             else: # Coruja
                 url = f"{self.config.api_base_url}/updates"
                 headers = {
@@ -55,12 +62,17 @@ class Tasks(commands.Cog):
             
             if self.config.api_type == 'coruja':
                 updates = data.get('obras', [])
+            elif self.config.api_type == 'muyo':
+                updates = data.get('releases', [])
             else:
                 updates = data.get('updates', [])
             print(f"[{self.config.name}] ✅ Encontradas {len(updates)} obras com novos lançamentos")
             
             for update in updates:
-                await self.process_release(update)
+                if self.config.api_type == 'muyo':
+                    await self.process_muyo_release(update)
+                else:
+                    await self.process_release(update)
                 
         except Exception as e:
             print(f"[{self.config.name}] ❌ Erro na verificação: {e}")
@@ -104,6 +116,82 @@ class Tasks(commands.Cog):
         except Exception as e:
             pass
         return None
+
+    async def process_muyo_release(self, release):
+        nome = release.get('title', '')
+        if not nome:
+            return
+            
+        tipo_str = "Série/Anime"
+        if release.get('type') == 'movie':
+            tipo_str = "Filme"
+            
+        chapter_str = "Lançamento"
+
+        if self.db.is_chapter_published(nome, chapter_str):
+            return
+            
+        # Tenta inserir na DB se for novo
+        obra = self.db.get_project_data(nome)
+        if not obra:
+            cargo_criado_id = await self.create_base_role(nome) if self.config.cargo_base_id else None
+            obra_data = {
+                "nome": nome,
+                "sinopse": release.get('overview', ''),
+                "cargo_id": cargo_criado_id,
+                "imagem": release.get('poster') or 'https://muyoanimes.com/default.jpg'
+            }
+            self.db.insert_obra(obra_data)
+            obra = self.db.get_project_data(nome)
+            
+        if not obra:
+            return
+            
+        channel_id = self.config.announcement_channel_id
+        if not channel_id:
+            return
+            
+        destino = self.bot.get_channel(channel_id)
+        if destino:
+            is_in_discord = await self.check_if_published_in_discord(destino, nome, chapter_str)
+            if is_in_discord:
+                print(f"[{self.config.name}] ⏭️ {nome} já está no Discord.")
+                self.db.mark_chapter_as_published(nome, chapter_str)
+                return
+
+        imagem = release.get('poster')
+        slug = release.get('slug', '')
+        link = f"https://muyoanimes.com/{release.get('type')}/{slug}"
+        
+        embed = discord.Embed(
+            title=f"Novo {tipo_str} Disponível: {nome}",
+            description=f"**Sinopse:** {release.get('overview', 'Sem sinopse.')}",
+            color=0x2b2d31,
+            url=link
+        )
+        
+        file_attachment = None
+        if imagem:
+            file_attachment = await self.fetch_image_file(imagem)
+            if file_attachment:
+                embed.set_image(url=f"attachment://{file_attachment.filename}")
+            else:
+                embed.set_image(url=imagem)
+                
+        # Menção do cargo
+        cargo_id = obra.get('cargo_id')
+        mention_str = f"<@&{cargo_id}>" if cargo_id else ""
+        
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Assistir Agora", url=link, style=discord.ButtonStyle.link))
+        
+        if destino:
+            try:
+                await self._send_webhook(destino, mention_str, embed, view, file_attachment, ['🍿'])
+                self.db.mark_chapter_as_published(nome, chapter_str)
+                print(f"[{self.config.name}] ✅ {nome} anunciado!")
+            except Exception as e:
+                print(f"[{self.config.name}] ❌ Erro ao postar: {e}")
 
     async def process_release(self, update):
         serie = update

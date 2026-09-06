@@ -5,7 +5,7 @@ import sys
 # Ensure src is in the python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.config.config import YOMU_CONFIG, SENPAI_CONFIG, CORUJA_CONFIG
+from src.config.config import YOMU_CONFIG, SENPAI_CONFIG, CORUJA_CONFIG, MUYO_CONFIG
 from src.bot import ConfigBot
 
 async def start_bot(config):
@@ -29,7 +29,8 @@ async def main():
     bots = [
         start_bot(YOMU_CONFIG),
         start_bot(SENPAI_CONFIG),
-        start_bot(CORUJA_CONFIG)
+        start_bot(CORUJA_CONFIG),
+        start_bot(MUYO_CONFIG)
     ]
     
     await asyncio.gather(*bots)
